@@ -1,95 +1,115 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client';
+
+import { useState } from 'react';
+import Image from 'next/image';
+import { Audio } from 'react-loader-spinner'
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const getUsers = async (e) => {
+    setLoading(true);
+    e.preventDefault();
+    const response = await fetch('https://api.github.com/users/' + e.target.name.value);
+    const data = await response.json();
+
+    if (data.message) {
+      setError(true);
+    }
+
+    setUser(data);
+    setLoading(false);
+
+    setTimeout(() => {
+      setError(false);
+    }, 3000);
+  };
+
+  const goToProfile = (url) => {
+    window.open(url, '_blank');
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main>
+
+      <form onSubmit={getUsers}>
+        <input type="text" name="name" placeholder="Search" />
+        <input type="submit" value="Search" />
+      </form>
+
+      {user && user.login ? (
+        <>
+          {loading ? (
+            <div className="loader">
+              <Audio
+                height="80"
+                width="80"
+                radius="9"
+                color="#05386b"
+                ariaLabel="loading"
+                wrapperStyle
+                wrapperClass
+              />
+            </div>
+          ) : (
+            <div className='github-profile'>
+              <div className='github-profile-image'>
+                <Image unoptimized src={user.avatar_url} width={200} height={200} alt="Picture of the author" />
+              </div>
+              <div className='github-profile-review'>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Id</th>
+                      <th>Username</th>
+                      <th>Followers</th>
+                      <th>following</th>
+                      <th>Location</th>
+                      <th>Repos</th>
+                      <th>Type</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>#{user.id}</td>
+                      <td>{user.login}</td>
+                      <td>{user.followers}</td>
+                      <td>{user.following}</td>
+                      <td>{user.location}</td>
+                      <td>{user.public_repos}</td>
+                      <td>{user.type}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {user.html_url && (
+                  <div className='github-profile-actions'>
+                    <button onClick={() => goToProfile(user.html_url)}>GitHub Profile</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+        </>
+
+
+      ) : (
+        <div className='search-github-user'>
+          <hr />
+          <h1>Search for a GitHub user</h1>
         </div>
-      </div>
+      )}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+      {error && (
+        <div className='error-toast'>
+          <h1 onClick={() => setError(false)}>GitHub user not found</h1>
+        </div>
+      )}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
   )
 }
